@@ -8,8 +8,8 @@ class BTThermometerServer():
     def __init__(self, port):
         self.connected = False
         self.port = PORT
-        self.sock = None
-
+        self.server_sock = None
+        self.client_sock = None
         self.bt_connect()
 
     def run(self):
@@ -26,10 +26,14 @@ class BTThermometerServer():
 
     def bt_connect(self):
         try:
-            self.sock = bluetooth.BluetoothSocket( bluetooth.RFCOMM )
-            self.sock.bind(("",port))
-            self.sock.listen(1)
-            self.client_sock,address = server_sock.accept()
+            if self.server_sock not None:
+                self.server_sock.close()
+            if self.client_sock not None:
+                self.client_sock.close()
+            self.server_sock = bluetooth.BluetoothSocket( bluetooth.RFCOMM )
+            self.server_sock.bind(("", self.port))
+            self.server_sock.listen(1)
+            self.client_sock,address = self.server_sock.accept()
             print("Accepted connection from %s" % self.address)
             self.connected = True
         except bluetooth.btcommon.BluetoothError as e:
@@ -39,6 +43,6 @@ class BTThermometerServer():
             self.bt_connect()
 
 if __name__ == '__main__':
-    therm = BTThermometer(BD_ADDR, PORT, SAMPLE_FREQ)
+    therm = BTThermometerServer(PORT)
     therm.run()
     
