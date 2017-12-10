@@ -7,11 +7,11 @@ PORT = 1
 SAMPLE_FREQ = 60 # Hz
 
 class BTThermometer():
-    def __init__(self, BD_ADDR, PORT, SAMPLE_FREQ):
+    def __init__(self, bd_addr, port, sample_freq):
         self.connected = False
-        self.bd_addr = BD_ADDR
-        self.port = PORT
-        self.freq = SAMPLE_FREQ
+        self.bd_addr = bd_addr
+        self.port = port
+        self.freq = sample_freq
         self.sock = None
 
         self.bt_connect()
