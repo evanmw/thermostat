@@ -10,8 +10,14 @@ client_sock,address = server_sock.accept()
 print "Accepted connection from ",address
 
 while(1):
+    data = ""
+    data_valid = False
+    try:
         data = client_sock.recv(1024)
-        print "received [%s]" % data
+        data_valid = True
+    except bluetooth.btcommon.BluetoothError:
+        print("Bluetooth recieve error")
+    print "received [%s]" % data
 
 client_sock.close()
 server_sock.close()

@@ -4,7 +4,7 @@ import time
 
 BD_ADDR = "B8:27:EB:8B:68:DA"
 PORT = 1
-SAMPLE_FREQ = 1 # Hz
+SAMPLE_FREQ = 60 # Hz
 
 sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 sock.connect((BD_ADDR, PORT))
