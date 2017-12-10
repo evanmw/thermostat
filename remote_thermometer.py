@@ -2,7 +2,7 @@
 import bluetooth
 import time
 
-BD_ADDR = "B8:27:EB:8B:68:DA"
+BD_ADDR = "E4:A7:A0:5A:54:28"
 PORT = 1
 SAMPLE_FREQ = 60 # Hz
 
