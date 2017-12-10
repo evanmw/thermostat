@@ -2,14 +2,19 @@
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+if [[ $EUID -ne 0 ]]; then
+   echo "This script must be run as root" 
+   exit 1
+fi
+
 sudo apt update
 sudo apt upgrade
 sudo apt install -y build-essential python-dev python-pip
-sudo pip install -y RPi.GPIO
+sudo pip install RPi.GPIO
 
 # Bluetooth things
 sudo apt install -y bluetooth
-sudo pip install -y pybluez
+sudo pip install pybluez
 
 # Dependencies for the screen
 sudo apt install -y python-imaging python-smbus
@@ -18,12 +23,12 @@ sudo apt install -y python-imaging python-smbus
 sudo apt install -y python-smbus i2c-tools
 sudo i2c-dev >> /etc/modules
 if [ -f /boot/config.txt ]; then
-    sed -i '/i2c_arm/s/^#//g' /boot/config.txt # uncomment ine with "i2c_arm" in config file
-    sed -i '/i2c1/s/^#//g' /boot/config.txt
+    sudo sed -i '/i2c_arm/s/^#//g' /boot/config.txt # uncomment ine with "i2c_arm" in config file
+    sudo sed -i '/i2c1/s/^#//g' /boot/config.txt
 fi
 if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
-    sed -i '/i2c-bcm2708/s/^/#/g' /etc/modprobe.d/raspi-blacklist.conf
-    sed -i '/spi-bcm2708/s/^/#/g' /etc/modprobe.d/raspi-blacklist.conf
+    sudo sed -i '/i2c-bcm2708/s/^/#/g' /etc/modprobe.d/raspi-blacklist.conf
+    sudo sed -i '/spi-bcm2708/s/^/#/g' /etc/modprobe.d/raspi-blacklist.conf
 fi
 sudo adduser pi i2c
 
@@ -32,7 +37,7 @@ sudo echo "#Enable 1-wire support" >> /boot/config.txt
 sudo echo "dtoverlay=w1-gpio" >> /boot/config.txt
 
 # PWM
-sudo pip install -y wiringpi
+sudo pip install wiringpi
 
 
 pushd $ROOT
