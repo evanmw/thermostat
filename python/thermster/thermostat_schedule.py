@@ -15,6 +15,7 @@ class ThermostatSchedule():
         self.sheshule.every(15).seconds.do(self.setpoint, 70, "local")
         self.sheshule.every(25).seconds.do(self.setpoint, 50, "bt_therm")
 
+
     def setpoint(self, temp, thermometer="local"):
         with self.setpoint_lock:
             self.set_setpoint((temp, thermometer))
