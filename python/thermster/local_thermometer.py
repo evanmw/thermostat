@@ -22,7 +22,7 @@ class LocalThermometer():
         os.system('modprobe w1-therm')
 
         # Find device folder
-        base_dir = '/home/evan/thermostat/test_local_therm/'
+        base_dir = '/home/pi/thermostat/test_local_therm/'
         device_folder = glob.glob(base_dir + '28*')[0]
         self.device_file = device_folder + '/w1_slave'
 

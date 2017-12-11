@@ -5,6 +5,7 @@ from collections import deque
 from remote_thermometer_receive import BTThermometerServer
 from local_thermometer import LocalThermometer
 from thermostat_schedule import ThermostatSchedule
+from pi_interface import PiInterface
 
 PORT = 1
 
@@ -33,7 +34,8 @@ class Thermostat():
         # add threads
         self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.temps, self.temps_lock),
                                LocalThermometer("local", self.temps, self.temps_lock),
-                               ThermostatSchedule("schedule", self.set_setpoint, self.setpoint_lock)]
+                               ThermostatSchedule("schedule", self.set_setpoint, self.setpoint_lock),
+                               PiInterface("pi_interface", self.temps, self.temps_lock, self.get_setpoint, self.setpoint_lock)]
         self.threads = []
         for obj in self.thread_objects:
             self.threads.append(threading.Thread(name=obj.name, target=obj.run))
@@ -43,6 +45,10 @@ class Thermostat():
     def set_setpoint(self, setpoint):
         with self.setpoint_lock:
             self.setpoint = setpoint
+
+    def get_setpoint(self):
+        with self.setpoint_lock:
+            return self.setpoint
 
     def run(self):
         while not self.kill_received:
