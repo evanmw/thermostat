@@ -20,8 +20,8 @@ class BTThermometer():
     def run(self):
         while (1):
             try:
-                time = datetime.now()
-                self.sock.send("%s, 68" % time.strftime('%b %d %Y %I:%M%p'))
+                cur_time = datetime.now()
+                self.sock.send("%s, 68" % cur_time.strftime('%b %d %Y %I:%M%p'))
             except bluetooth.btcommon.BluetoothError as e:
                 print ("Bluetooth error: %s" % e)
                 self.bt_connect()
