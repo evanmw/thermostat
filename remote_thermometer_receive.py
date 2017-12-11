@@ -2,6 +2,7 @@ import bluetooth
 import logging
 from datetime import datetime
 import threading
+from collections import deque 
 
 server_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
@@ -16,30 +17,31 @@ class BTThermometerServer():
         self.port = PORT
         self.server_sock = None
         self.client_sock = None
-        self.bt_connect()
-        self.kill_recieved = False
+        self.kill_received = False
 
         with self.data_lock:
-            self.data[self.name] = []
+            self.data[self.name] = deque(maxlen=100000)
 
     def run(self):
-        while not self.kill_recieved:
-            recieved = ""
-            recieved_valid = False
+        while not self.kill_received:
+            if not self.connected:
+                self.bt_connect()
+            received = ""
+            received_valid = False
             try:
-                recieved = self.client_sock.recv(1024)
-                recieved_valid = True
+                received = self.client_sock.recv(1024)
+                received_valid = True
             except bluetooth.btcommon.BluetoothError:
-                logging.debug("Bluetooth recieve error")
+                logging.debug("Bluetooth receive error")
                 self.bt_connect()
 
-            if recieved != "":
-                recieved = recieved.split(',')
-                recieved_parsed = (datetime.strptime(recieved[0], '%b %d %Y %I:%M%p'), recieved[1])
+            if received != "":
+                received = received.split(',')
+                received_parsed = (datetime.strptime(received[0], '%b %d %Y %I:%M%p'), received[1])
                 with self.data_lock:
-                    self.data[self.name].append(recieved_parsed)
+                    self.data[self.name].append(received_parsed)
 
-        logging.warn("Recieved kill")
+        logging.warn("received kill")
         self.client_sock.close()
         self.server_sock.close()
 
@@ -66,6 +68,6 @@ if __name__ == '__main__':
         therm = BTThermometerServer(PORT)
         therm.run()
     except KeyboardInterrupt:
-        therm.kill_recieved = True
+        therm.kill_received = True
 
     

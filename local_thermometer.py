@@ -2,11 +2,12 @@ import os
 import time
 import glob
 import logging
+from collections import deque
 from datetime import datetime
 
 class LocalThermometer():
     def __init__(self, name, data, data_lock, sample_freq=1):
-        self.kill_recieved = False
+        self.kill_received = False
         self.sample_freq = sample_freq
 
         self.data = data
@@ -14,7 +15,7 @@ class LocalThermometer():
         self.name = name # threading.current_thread()
 
         with self.data_lock:
-            self.data[self.name] = []
+            self.data[self.name] = deque(maxlen=100000)
 
         # Enable temp sensor
         os.system('modprobe w1-gpio')
@@ -50,11 +51,11 @@ class LocalThermometer():
             self.data[self.name].append((datetime.now(), temp_c))
 
     def run(self):
-        while not self.kill_recieved:
+        while not self.kill_received:
             self.sample()
             time.sleep(self.sample_freq)
 
-        logging.warn("Recieved kill")
+        logging.warn("received kill")
 
 
 if __name__ == '__main__':
