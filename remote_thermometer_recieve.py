@@ -1,19 +1,26 @@
 import bluetooth
 import logging
 from datetime import datetime
+import threading
 
 server_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 
 PORT = 1
 
 class BTThermometerServer():
-    def __init__(self, port, data, data_lock):
+    def __init__(self, name, port, data, data_lock):
+        self.name = name
+        self.data = data
+        self.data_lock = data_lock
         self.connected = False
         self.port = PORT
         self.server_sock = None
         self.client_sock = None
         self.bt_connect()
         self.kill_recieved = False
+
+        with self.data_lock:
+            self.data[self.name] = []
 
     def run(self):
         while not self.kill_recieved:
@@ -29,9 +36,12 @@ class BTThermometerServer():
             if recieved != "":
                 recieved = recieved.split(',')
                 recieved_parsed = (datetime.strptime(recieved[0], '%b %d %Y %I:%M%p'), recieved[1])
-                logging.debug("received_parsed " % recieved_parsed)
                 with self.data_lock:
-                    self.data.append(recieved_parsed)
+                    self.data[self.name].append(recieved_parsed)
+
+        logging.warn("Recieved kill")
+        self.client_sock.close()
+        self.server_sock.close()
 
     def bt_connect(self):
         try:

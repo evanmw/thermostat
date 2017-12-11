@@ -2,6 +2,7 @@ import time
 import threading
 import logging
 from remote_thermometer_recieve import BTThermometerServer
+from local_thermometer import LocalThermometer
 
 PORT = 1
 
@@ -24,21 +25,25 @@ class Thermostat():
         self.kill_recieved = False
         self.threads = {}
 
-        # add 
-        self.remote_therm = BTThermometerServer(PORT, self.temps, self.temps_lock)
-        self.threads['bt_therm'] = \
-            threading.Thread(name="bt_therm", target=self.remote_therm.run)
-        for thread in self.threads.keys():
-            self.threads[thread].start()
+        # add threads
+        self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.temps, self.temps_lock),
+                               LocalThermometer("local_therm", self.temps, self.temps_lock)]
+        self.threads = []
+        for obj in self.thread_objects:
+            self.threads.append(threading.Thread(name=obj.name, target=obj.run))
+            self.threads[-1].start()
         logging.debug("started")
 
     def run(self):
         while not self.kill_recieved:
+            with self.temps_lock:
+                logging.debug("remote samples: %s" % len(self.temps['bt_therm']))
+                logging.debug("local samples: %s" % len(self.temps['local_therm']))
             time.sleep(1)
 
     def kill(self):
-        for thread in self.threads.keys():
-            self.threads[thread].kill_recieved = True
+        for obj in self.thread_objects:
+            obj.kill_recieved = True
         self.kill_recieved = True
 
 
@@ -47,5 +52,5 @@ if __name__=='__main__':
         thermostat = Thermostat()
         thermostat.run()
     except KeyboardInterrupt:
-        logging.warn("recieved kill")
+        logging.warn("Recieved kill")
         thermostat.kill()
