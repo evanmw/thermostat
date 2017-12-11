@@ -1,3 +1,3 @@
-[submodule "external/Adafruit_Python_SSD1306"]
-	path = external/Adafruit_Python_SSD1306
+[submodule "python/Adafruit_Python_SSD1306"]
+	path = python/Adafruit_Python_SSD1306
 	url = https://github.com/adafruit/Adafruit_Python_SSD1306.git
