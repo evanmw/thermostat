@@ -13,7 +13,7 @@ sudo apt install -y build-essential python-dev python-pip
 sudo pip install RPi.GPIO
 
 # Bluetooth things
-sudo apt install -y bluetooth
+sudo apt install libbluetooth-dev
 sudo pip install pybluez
 
 # Dependencies for the screen
