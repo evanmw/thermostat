@@ -48,6 +48,8 @@ class PiInterface():
             self.update_setpoint()
             temp = 0
             with self.temp_lock:
+                if len(self.temps["local"]) < 1:
+                    continue
                 temp = self.temps["local"][-1]
             
             self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)

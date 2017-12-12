@@ -33,7 +33,7 @@ class Thermostat():
 
         # add threads
         self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.temps, self.temps_lock),
-                               LocalThermometer("local", self.temps, self.temps_lock),
+                               LocalThermometer("local", self.temps, self.temps_lock, sample_freq=0.17),
                                ThermostatSchedule("schedule", self.set_setpoint, self.setpoint_lock),
                                PiInterface("pi_interface", self.temps, self.temps_lock, self.get_setpoint, self.setpoint_lock)]
         self.threads = []
