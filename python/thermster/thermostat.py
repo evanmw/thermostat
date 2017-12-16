@@ -15,32 +15,18 @@ logging.basicConfig(level=logging.DEBUG,
 
 
 '''
-Temperature data stored in Thermostat.temps
+Temperature data stored in ThermostatData.temps
 Takes the form:
 
 {ThermOneName: [(t1, T1), (t2, T2)], ThermTwoName: [(t1, T1), (t2,T2)]}
 '''
 
-class Thermostat():
+class ThermostatData():
     def __init__(self):
-        self.temps = {}
+        self.temps{}
         self.temps_lock = threading.RLock()
-        self.kill_received = False
-        self.threads = {}
-
-        self.setpoint = (72, "local") # (int(temp), str(thermometer))
+        self.setpoint = (72, "local")
         self.setpoint_lock = threading.RLock()
-
-        # add threads
-        self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.temps, self.temps_lock),
-                               LocalThermometer("local", self.temps, self.temps_lock, sample_freq=0.17),
-                               ThermostatSchedule("schedule", self.set_setpoint, self.setpoint_lock),
-                               PiInterface("pi_interface", self.temps, self.temps_lock, self.get_setpoint, self.setpoint_lock)]
-        self.threads = []
-        for obj in self.thread_objects:
-            self.threads.append(threading.Thread(name=obj.name, target=obj.run))
-            self.threads[-1].start()
-        logging.debug("Threads started")
 
     def set_setpoint(self, setpoint):
         with self.setpoint_lock:
@@ -49,6 +35,25 @@ class Thermostat():
     def get_setpoint(self):
         with self.setpoint_lock:
             return self.setpoint
+        
+class Thermostat():
+    def __init__(self):
+
+        self.data = ThermostatData()
+
+        # add threads
+        self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.temps, self.temps_lock),
+                               LocalThermometer("local", self.temps, self.temps_lock,
+                                                sample_freq=0.17),
+                               ThermostatSchedule("schedule", self.set_setpoint,
+                                                  self.setpoint_lock),
+                               PiInterface("pi_interface", self.temps, self.temps_lock,
+                                           self.get_setpoint, self.setpoint_lock)]
+        self.threads = []
+        for obj in self.thread_objects:
+            self.threads.append(threading.Thread(name=obj.name, target=obj.run))
+            self.threads[-1].start()
+        logging.debug("Threads started")
 
     def run(self):
         while not self.kill_received:

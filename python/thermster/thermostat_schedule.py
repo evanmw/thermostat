@@ -4,11 +4,12 @@ import threading
 import logging
 
 class ThermostatSchedule():
-    def __init__(self, name, set_setpoint, setpoint_lock):
+    def __init__(self, name, data): #set_setpoint, setpoint_lock):
         self.name = name
         self.kill_received = False
-        self.set_setpoint = set_setpoint
-        self.setpoint_lock = setpoint_lock
+#        self.set_setpoint = set_setpoint
+        self.setpoint_lock = data.setpoint_lock
+        self.setpoint = data.setpoint
         self.sheshule = schedule.Scheduler()
 
 
@@ -18,7 +19,8 @@ class ThermostatSchedule():
 
     def setpoint(self, temp, thermometer="local"):
         with self.setpoint_lock:
-            self.set_setpoint((temp, thermometer))
+#            self.set_setpoint((temp, thermometer))
+            self.setpoint((temp, thermometer))
 
     def run(self):
         while not self.kill_received:

@@ -9,18 +9,18 @@ server_sock=bluetooth.BluetoothSocket( bluetooth.RFCOMM )
 PORT = 1
 
 class BTThermometerServer():
-    def __init__(self, name, port, data, data_lock):
+    def __init__(self, name, port, data):
         self.name = name
-        self.data = data
-        self.data_lock = data_lock
+        self.temps = data.temps
+        self.temps_lock = data.temps_lock
         self.connected = False
         self.port = PORT
         self.server_sock = None
         self.client_sock = None
         self.kill_received = False
 
-        with self.data_lock:
-            self.data[self.name] = deque(maxlen=100000)
+        with self.temps_lock:
+            self.temps[self.name] = deque(maxlen=100000)
 
     def run(self):
         while not self.kill_received:
@@ -38,8 +38,8 @@ class BTThermometerServer():
             if received != "":
                 received = received.split(',')
                 received_parsed = (datetime.strptime(received[0], '%b %d %Y %I:%M%p'), received[1])
-                with self.data_lock:
-                    self.data[self.name].append(received_parsed)
+                with self.temps_lock:
+                    self.temps[self.name].append(received_parsed)
 
         logging.warn("received kill")
         self.client_sock.close()

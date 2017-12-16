@@ -8,14 +8,15 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 class PiInterface():
-    def __init__(self, name, temps, temp_lock, get_setpoint, setpoint_lock):
+    def __init__(self, name, data): #temps, temp_lock, get_setpoint, setpoint_lock):
         self.kill_received = False
         self.name = name
-        self.temps = temps
-        self.temp_lock = temp_lock
-        self.get_setpoint = get_setpoint
-        self.setpoint_lock = setpoint_lock
-        self.setpoint = self.update_setpoint()
+        self.temps = data.temps
+        self.temp_lock = data.temps_lock
+        self.setpoint = data.setpoint
+#        self.get_setpoint = get_setpoint
+        self.setpoint_lock = data.setpoint_lock
+#        self.setpoint = self.update_setpoint()
 
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.WARNING)
@@ -34,9 +35,9 @@ class PiInterface():
         self.font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=55)
         self.s_font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=40)
         
-    def update_setpoint(self):
-        with self.setpoint_lock:
-            self.setpoint = self.get_setpoint()
+#    def update_setpoint(self):
+#        with self.setpoint_lock:
+#            self.setpoint = self.get_setpoint()
 
     def scrawl(self, text, font, x, y):
         text = str(text)
@@ -45,7 +46,7 @@ class PiInterface():
             
     def run(self):
         while not self.kill_received:
-            self.update_setpoint()
+#            self.update_setpoint()
             temp = 0
             with self.temp_lock:
                 if len(self.temps["local"]) < 1:
