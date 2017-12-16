@@ -13,10 +13,8 @@ class PiInterface():
         self.name = name
         self.temps = data.temps
         self.temp_lock = data.temps_lock
-        self.setpoint = data.setpoint
-#        self.get_setpoint = get_setpoint
+        self.get_setpoint = data.get_setpoint
         self.setpoint_lock = data.setpoint_lock
-#        self.setpoint = self.update_setpoint()
 
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.WARNING)
@@ -35,10 +33,6 @@ class PiInterface():
         self.font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=55)
         self.s_font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=40)
         
-#    def update_setpoint(self):
-#        with self.setpoint_lock:
-#            self.setpoint = self.get_setpoint()
-
     def scrawl(self, text, font, x, y):
         text = str(text)
         self.draw.text((x-font.getoffset(text)[0], 0-font.getoffset(text)[1]),
@@ -46,7 +40,6 @@ class PiInterface():
             
     def run(self):
         while not self.kill_received:
-#            self.update_setpoint()
             temp = 0
             with self.temp_lock:
                 if len(self.temps["local"]) < 1:
@@ -55,7 +48,7 @@ class PiInterface():
             
             self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
             self.scrawl(int(round(temp[1])), self.font, 0, 0)
-            self.scrawl(self.setpoint[0], self.s_font, 70, 20)
+            self.scrawl(self.get_setpoint()[0], self.s_font, 70, 20)
 
             self.disp.image(self.image)
             self.disp.display()

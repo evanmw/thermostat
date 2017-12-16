@@ -7,20 +7,14 @@ class ThermostatSchedule():
     def __init__(self, name, data): #set_setpoint, setpoint_lock):
         self.name = name
         self.kill_received = False
-#        self.set_setpoint = set_setpoint
+        self.set_setpoint = data.set_setpoint
         self.setpoint_lock = data.setpoint_lock
-        self.setpoint = data.setpoint
+        self.setpoint = data.get_setpoint
         self.sheshule = schedule.Scheduler()
 
 
-        self.sheshule.every(15).seconds.do(self.setpoint, 70, "local")
-        self.sheshule.every(25).seconds.do(self.setpoint, 50, "bt_therm")
-
-
-    def setpoint(self, temp, thermometer="local"):
-        with self.setpoint_lock:
-#            self.set_setpoint((temp, thermometer))
-            self.setpoint((temp, thermometer))
+        self.sheshule.every(15).seconds.do(self.set_setpoint, 70, "local")
+        self.sheshule.every(25).seconds.do(self.set_setpoint, 50, "bt_therm")
 
     def run(self):
         while not self.kill_received:

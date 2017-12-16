@@ -12,7 +12,7 @@ class LocalThermometer():
         self.sample_freq = sample_freq
 
         self.temps = data.temps
-        self.temp_lock = data.temps_lock
+        self.temps_lock = data.temps_lock
         self.name = name # threading.current_thread()
 
         with self.temps_lock:

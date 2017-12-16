@@ -23,14 +23,14 @@ Takes the form:
 
 class ThermostatData():
     def __init__(self):
-        self.temps{}
+        self.temps = {}
         self.temps_lock = threading.RLock()
         self.setpoint = (72, "local")
         self.setpoint_lock = threading.RLock()
 
-    def set_setpoint(self, setpoint):
+    def set_setpoint(self, temp, thermostat):
         with self.setpoint_lock:
-            self.setpoint = setpoint
+            self.setpoint = (temp, thermostat)
 
     def get_setpoint(self):
         with self.setpoint_lock:
@@ -38,17 +38,15 @@ class ThermostatData():
         
 class Thermostat():
     def __init__(self):
-
+        self.kill_received = False
         self.data = ThermostatData()
 
         # add threads
-        self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.temps, self.temps_lock),
-                               LocalThermometer("local", self.temps, self.temps_lock,
+        self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.data),
+                               LocalThermometer("local", self.data,
                                                 sample_freq=0.17),
-                               ThermostatSchedule("schedule", self.set_setpoint,
-                                                  self.setpoint_lock),
-                               PiInterface("pi_interface", self.temps, self.temps_lock,
-                                           self.get_setpoint, self.setpoint_lock)]
+                               ThermostatSchedule("schedule", self.data),
+                               PiInterface("pi_interface", self.data)]
         self.threads = []
         for obj in self.thread_objects:
             self.threads.append(threading.Thread(name=obj.name, target=obj.run))
@@ -57,7 +55,7 @@ class Thermostat():
 
     def run(self):
         while not self.kill_received:
-            logging.debug("setpoint: %s" % str(self.setpoint))
+            logging.warn("setpoint: %s" % str(self.data.setpoint))
             time.sleep(1)
 
     def kill(self):
