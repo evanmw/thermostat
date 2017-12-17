@@ -1,7 +1,7 @@
-
 import bluetooth
 import time
 from datetime import datetime
+from thermometer import Thermometer
 
 BD_ADDR = "E4:A7:A0:5A:54:28"
 PORT = 1
@@ -15,13 +15,16 @@ class BTThermometer():
         self.freq = sample_freq
         self.sock = None
 
-        self.bt_connect()
+        self.thermometer = Thermometer()
 
+        self.bt_connect()
+        
     def run(self):
         while (1):
             try:
                 cur_time = datetime.now()
-                self.sock.send("%s, 68" % cur_time.strftime('%b %d %Y %I:%M%p'))
+                self.sock.send("%s, %s" % cur_time.strftime('%b %d %Y %I:%M%p'),
+                               self.thermometer.read_temp[1])
             except bluetooth.btcommon.BluetoothError as e:
                 print ("Bluetooth error: %s" % e)
                 self.bt_connect()
