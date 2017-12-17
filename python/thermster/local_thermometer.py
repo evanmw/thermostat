@@ -21,7 +21,7 @@ class LocalThermometer():
         self.thermometer = Thermometer()
             
     def sample(self):
-        temp_c, temp_f = self.thermometer.read_temp()
+        temp_c = self.thermometer.read_temp()
         with self.temps_lock:
             self.temps[self.name].append((datetime.now(), temp_c))
 
