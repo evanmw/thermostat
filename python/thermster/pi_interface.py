@@ -23,8 +23,8 @@ class PiInterface():
         self.REQ_CYCLES = self.PRESS_DURATION * self.RUN_RATE
         self.LOOP_SLEEP = 1/self.RUN_RATE
         # button NAME: [pin, cur_cycles, callback]
-        buttons = {'Lpin': [27, 0, None],
-                   'Rpin': [23, 0, None],
+        buttons = {'Lpin': [27, 0, self.left_cb],
+                   'Rpin': [23, 0, self.right_cb],
                    'Cpin': [ 4, 0, None],
                    'Upin': [17, 0, self.up_cb],
                    'Dpin': [22, 0, self.down_cb],
@@ -42,7 +42,8 @@ class PiInterface():
         self.temp_lock = data.temps_lock
         self.get_setpoint = data.get_setpoint
         self.set_setpoint = data.set_setpoint
-
+        self.WEIGHT_OPTIONS = data.WEIGHT_OPTIONS
+        
         self.logger = logging.getLogger()
         self.logger.setLevel(logging.WARNING)
 
@@ -73,6 +74,20 @@ class PiInterface():
         temp_sp, therm = self.get_setpoint()
         self.set_setpoint(temp_sp-1, therm)
 
+    def right_cb(self):
+        temp_sp, weight = self.get_setpoint()
+        weight = weight-1
+        if weight < 0:
+            weight = len(self.WEIGHT_OPTIONS)-1
+        self.set_setpoint(temp_sp, weight)
+
+    def left_cb(self):
+        temp_sp, weight = self.get_setpoint()
+        weight = weight+1
+        if weight > len(self.WEIGHT_OPTIONS)-1:
+            weight = 0
+        self.set_setpoint(temp_sp, weight)
+
     def a_cb(self):
         self.fahrenheit = not self.fahrenheit
 
@@ -91,6 +106,20 @@ class PiInterface():
             return c
         return round(c, 1)
 
+    def draw_weight_indicator(self):
+        x = 71
+        indicator_len = 24
+        screen_height = 60
+
+        max_y_top = screen_height - indicator_len        
+        temp, weight_index = self.get_setpoint()
+        weight = self.WEIGHT_OPTIONS[weight_index]
+        y_top = max_y_top * (1 - weight)
+        y_bottom = y_top + indicator_len
+        
+        self.draw.line([(x, y_top), (x, y_bottom)], 1, 1)
+        
+    
     def run(self):
         while not self.kill_received:
             # check for button input
@@ -117,9 +146,6 @@ class PiInterface():
                 if len(self.temps["bt_therm"]) < 1:
                     continue
                 last_remote_time, remote_temp = self.temps["bt_therm"][-1]
-                logging.warn(last_remote_time)
-                logging.warn(datetime.datetime.now()-last_remote_time)
-                logging.warn('')
                 if datetime.datetime.now() - last_remote_time > datetime.timedelta(seconds=2*self.REMOTE_REPORT_PERIOD):
                     remote_temp = ' :('
 
@@ -141,11 +167,11 @@ class PiInterface():
 
             # current temps
             self.scrawl(local_temp, self.font, 0, 0)
-#            self.scrawl(self.get_setpoint()[0], self.s_font, 70, 20)
             self.scrawl(remote_temp, self.font, 0, 35)
 
             # setpoint thermometer weight
-            self.draw.line([(71, 0), (71, 24)], 1, 1)
+            self.draw_weight_indicator()
+            #            self.draw.line([(71, 0), (71, 24)], 1, 1)
 
             # setpoint temperature
             self.scrawl(setpoint_temp, self.s_font, 86, 5)

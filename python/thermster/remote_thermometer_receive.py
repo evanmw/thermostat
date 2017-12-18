@@ -40,7 +40,6 @@ class BTThermometerServer():
                 received_parsed = (datetime.strptime(received[0], '%b %d %Y %I:%M:%S%p'), float(received[1]))
                 with self.temps_lock:
                     self.temps[self.name].append(received_parsed)
-                    logging.warn("received remote temp at %s", received[0])
                     
         logging.warn("received kill")
         self.client_sock.close()

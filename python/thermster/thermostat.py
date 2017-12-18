@@ -27,17 +27,17 @@ class ThermostatData():
         # Constants
         self.MAX_TEMP = 35  # C
         self.MIN_TEMP = 10
-
+        self.WEIGHT_OPTIONS = [0, 0.25, 0.5, 0.75, 1]
 
         self.temps = {}
         self.temps_lock = threading.RLock()
-        self.setpoint = (21, "local")
+        self.setpoint = (21, 2)
         self.setpoint_lock = threading.RLock()
 
-    def set_setpoint(self, temp, thermostat):
+    def set_setpoint(self, temp, thermostat_weight_index):
         with self.setpoint_lock:
             setpoint_temp = int(round(max(min(temp, self.MAX_TEMP), self.MIN_TEMP)))
-            self.setpoint = (setpoint_temp, thermostat)
+            self.setpoint = (setpoint_temp, thermostat_weight_index)
 
     def get_setpoint(self):
         with self.setpoint_lock:
