@@ -1,5 +1,6 @@
 import logging
 import time
+import datetime
 import Adafruit_GPIO.SPI as SPI
 import Adafruit_SSD1306
 
@@ -14,7 +15,10 @@ class PiInterface():
 
         # set these
         self.RUN_RATE = 20 # Hz
-        self.PRESS_DURATION = 0.07 # second
+        self.PRESS_DURATION = 0.07 # seconds
+        self.REMOTE_REPORT_PERIOD = 2 # seconds
+        
+        self.fahrenheit = False
         
         self.REQ_CYCLES = self.PRESS_DURATION * self.RUN_RATE
         self.LOOP_SLEEP = 1/self.RUN_RATE
@@ -24,7 +28,7 @@ class PiInterface():
                    'Cpin': [ 4, 0, None],
                    'Upin': [17, 0, self.up_cb],
                    'Dpin': [22, 0, self.down_cb],
-                   'Apin': [ 5, 6, None],
+                   'Apin': [ 5, 6, self.a_cb]   ,
                    'Bpin': [ 6, 0, None]}
 
         # put buttons into better format
@@ -53,8 +57,8 @@ class PiInterface():
         self.draw = ImageDraw.Draw(self.image)
         self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
 
-        self.font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=55)
-        self.s_font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=40)      
+        self.font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=33)
+        self.s_font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=28)
 
         # Set pins as innputs:
         GPIO.setmode(GPIO.BCM) 
@@ -68,20 +72,27 @@ class PiInterface():
     def down_cb(self):
         temp_sp, therm = self.get_setpoint()
         self.set_setpoint(temp_sp-1, therm)
-           
+
+    def a_cb(self):
+        self.fahrenheit = not self.fahrenheit
+
     def scrawl(self, text, font, x, y):
         text = str(text)
-        self.draw.text((x-font.getoffset(text)[0], 0-font.getoffset(text)[1]),
+        self.draw.text((x-font.getoffset(text)[0], y-font.getoffset(text)[1]),
                        text, font=font, fill=255)
-            
+
+    def c_to_f(self, c):
+        if type(c) == type('--'):
+            return c
+        return 1.8*c+32
+
+    def round_temp(self, c):
+        if type(c) == type('--'):
+            return c
+        return round(c, 1)
+
     def run(self):
         while not self.kill_received:
-            temp = 0
-            with self.temp_lock:
-                if len(self.temps["local"]) < 1:
-                    continue
-                temp = self.temps["local"][-1]
-
             # check for button input
             for key, button in list(self.buttons.items()):
                 # if button is pressed, add to counter
@@ -94,11 +105,50 @@ class PiInterface():
                         continue
                     button['cb']()
                     button['cycles'] = 0  # reset cycles since cb
-                
+
+            # get the temperatures
+            local_temp = 0.0
+            remote_temp = 0.0
+
+            with self.temp_lock:
+                if len(self.temps["local"]) < 1:
+                    continue
+                last_local_time, local_temp = self.temps["local"][-1]
+                if len(self.temps["bt_therm"]) < 1:
+                    continue
+                last_remote_time, remote_temp = self.temps["bt_therm"][-1]
+                logging.warn(last_remote_time)
+                logging.warn(datetime.datetime.now()-last_remote_time)
+                logging.warn('')
+                if datetime.datetime.now() - last_remote_time > datetime.timedelta(seconds=2*self.REMOTE_REPORT_PERIOD):
+                    remote_temp = ' :('
+
+            # get the setpoint
+            setpoint_temp, setpoint_therm = self.get_setpoint()
+            
+            # convert to desired display units
+            if (self.fahrenheit):
+                local_temp = self.c_to_f(local_temp)
+                remote_temp = self.c_to_f(remote_temp)
+                setpoint_temp = int(round(self.c_to_f(setpoint_temp)))
+
+            # round temps to 1 decimal place
+            local_temp = self.round_temp(local_temp)
+            remote_temp = self.round_temp(remote_temp)
+
             # now draw    
             self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
-            self.scrawl(int(round(temp[1])), self.font, 0, 0)
-            self.scrawl(self.get_setpoint()[0], self.s_font, 70, 20)
+
+            # current temps
+            self.scrawl(local_temp, self.font, 0, 0)
+#            self.scrawl(self.get_setpoint()[0], self.s_font, 70, 20)
+            self.scrawl(remote_temp, self.font, 0, 35)
+
+            # setpoint thermometer weight
+            self.draw.line([(71, 0), (71, 24)], 1, 1)
+
+            # setpoint temperature
+            self.scrawl(setpoint_temp, self.s_font, 86, 5)
 
             self.disp.image(self.image)
             self.disp.display()

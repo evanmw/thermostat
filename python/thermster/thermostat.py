@@ -23,14 +23,21 @@ Takes the form:
 
 class ThermostatData():
     def __init__(self):
+
+        # Constants
+        self.MAX_TEMP = 35  # C
+        self.MIN_TEMP = 10
+
+
         self.temps = {}
         self.temps_lock = threading.RLock()
-        self.setpoint = (72, "local")
+        self.setpoint = (21, "local")
         self.setpoint_lock = threading.RLock()
 
     def set_setpoint(self, temp, thermostat):
         with self.setpoint_lock:
-            self.setpoint = (temp, thermostat)
+            setpoint_temp = int(round(max(min(temp, self.MAX_TEMP), self.MIN_TEMP)))
+            self.setpoint = (setpoint_temp, thermostat)
 
     def get_setpoint(self):
         with self.setpoint_lock:
@@ -55,7 +62,6 @@ class Thermostat():
 
     def run(self):
         while not self.kill_received:
-            logging.warn("setpoint: %s" % str(self.data.setpoint))
             time.sleep(1)
 
     def kill(self):

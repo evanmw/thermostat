@@ -13,8 +13,8 @@ class ThermostatSchedule():
         self.sheshule = schedule.Scheduler()
 
 
-        self.sheshule.every(15).seconds.do(self.set_setpoint, 70, "local")
-        self.sheshule.every(25).seconds.do(self.set_setpoint, 50, "bt_therm")
+        self.sheshule.every(15).seconds.do(self.set_setpoint, 22, "local")
+        self.sheshule.every(25).seconds.do(self.set_setpoint, 20, "bt_therm")
 
     def run(self):
         while not self.kill_received:
