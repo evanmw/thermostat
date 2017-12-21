@@ -37,7 +37,8 @@ class BTThermometerServer():
 
             if received != "":
                 received = received.split(',')
-                received_parsed = (datetime.strptime(received[0], '%b %d %Y %I:%M:%S%p'), float(received[1]))
+                received_parsed = (datetime.strptime(received[0], '%b %d %Y %I:%M:%S%p'),
+                                   float(received[1]))
                 with self.temps_lock:
                     self.temps[self.name].append(received_parsed)
                     
