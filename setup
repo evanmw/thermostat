@@ -12,6 +12,9 @@ sudo apt upgrade
 sudo apt install -y build-essential python-dev python-pip
 sudo pip install RPi.GPIO
 
+# Webserver
+sudo pip install Flask
+
 # Bluetooth things
 sudo apt install libbluetooth-dev
 sudo pip install pybluez
