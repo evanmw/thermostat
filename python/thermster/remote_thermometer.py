@@ -6,6 +6,7 @@ from thermometer import Thermometer
 BD_ADDR = "B8:27:EB:8B:68:DA"
 PORT = 1
 SAMPLE_FREQ = 1 # Hz
+THERMOMETER_BIAS_CORRECTION = -2.7 # degrees C
 
 class BTThermometer():
     def __init__(self, bd_addr, port, sample_freq):
@@ -15,7 +16,7 @@ class BTThermometer():
         self.freq = sample_freq
         self.sock = None
 
-        self.thermometer = Thermometer()
+        self.thermometer = Thermometer(THERMOMETER_BIAS_CORRECTION)
 
         self.bt_connect()
 
@@ -23,7 +24,7 @@ class BTThermometer():
         while (1):
             try:
                 cur_time = datetime.now()
-                self.sock.send("%s, %d" % (cur_time.strftime('%b %d %Y %I:%M:%S%p'),
+                self.sock.send("%s, %f" % (cur_time.strftime('%b %d %Y %I:%M:%S%p'),
                                self.thermometer.read_temp()))
             except bluetooth.btcommon.BluetoothError as e:
                 print ("Bluetooth error: %s" % e)

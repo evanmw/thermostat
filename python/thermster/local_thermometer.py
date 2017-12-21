@@ -10,7 +10,7 @@ class LocalThermometer():
     def __init__(self, name, data, sample_freq=1):
         self.kill_received = False
         self.sample_freq = sample_freq
-
+        
         self.temps = data.temps
         self.temps_lock = data.temps_lock
         self.name = name # threading.current_thread()
@@ -18,7 +18,7 @@ class LocalThermometer():
         with self.temps_lock:
             self.temps[self.name] = deque(maxlen=100000)
 
-        self.thermometer = Thermometer()
+        self.thermometer = Thermometer(data.LOCAL_BIAS_CORRECTION)
             
     def sample(self):
         temp_c = self.thermometer.read_temp()

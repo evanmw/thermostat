@@ -28,7 +28,9 @@ class ThermostatData():
         self.MAX_TEMP = 35  # C
         self.MIN_TEMP = 10
         self.WEIGHT_OPTIONS = [0, 0.25, 0.5, 0.75, 1]
-
+        self.LOCAL_BIAS_CORRECTION = -5.4 # degrees C
+        self.REMOTE_BIAS_CORRECTION = -2.7
+        
         self.temps = {}
         self.temps_lock = threading.RLock()
         self.setpoint = (21, 2)
@@ -36,7 +38,7 @@ class ThermostatData():
 
     def set_setpoint(self, temp, thermostat_weight_index):
         with self.setpoint_lock:
-            setpoint_temp = int(round(max(min(temp, self.MAX_TEMP), self.MIN_TEMP)))
+            setpoint_temp = max(min(temp, self.MAX_TEMP), self.MIN_TEMP)
             self.setpoint = (setpoint_temp, thermostat_weight_index)
 
     def get_setpoint(self):
@@ -50,8 +52,7 @@ class Thermostat():
 
         # add threads
         self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.data),
-                               LocalThermometer("local", self.data,
-                                                sample_freq=0.17),
+                               LocalThermometer("local", self.data, sample_freq=0.17),
                                ThermostatSchedule("schedule", self.data),
                                PiInterface("pi_interface", self.data)]
         self.threads = []
