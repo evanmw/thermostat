@@ -1,0 +1,41 @@
+<!doctype html>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type=text/javascript>
+  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+
+  (function pollServer() {
+    $.getJSON($SCRIPT_ROOT + '/_poll_data', function (response) {
+      if (response.temp) {
+        $("#setpoint_temp").text(response.setpoint_temp);
+        $("#temp").text(response.temp);
+      }
+    setTimeout(pollServer, 1000)
+    });
+  })();
+  
+  
+  $(function() {
+    $('a#set_temp').bind('click', function() {
+      $.getJSON($SCRIPT_ROOT + '/_set_temp', {
+        temp: $('input[name="a"]').val(),
+      }, function(data) {
+        $("#result").text(data.setpoint_temp);
+      });
+      return false;
+    });
+  });
+</script>
+
+<h1>jQuery Example</h1>
+<p><input type=text size=5 name=a> +
+   {{ setpoinot_temp }} =
+   <span id=result>?</span>
+<p><a href=# id=set_temp>calculate server side</a>
+  
+<title>Superstat</title>
+{% if temp %}
+  <h1>Hello! It's <span id=temp>{{ temp }}</span> degrees celsius!</h1>
+  <h2>The current setpoint is <span id=setpoint_temp>{{ setpoint_temp }}</span>.</h2>
+{% else %}
+  <h1>Hello, World!</h1>
+{% endif %}
