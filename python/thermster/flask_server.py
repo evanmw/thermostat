@@ -17,21 +17,21 @@ class WebServer():
         self.app.add_url_rule('/_poll_data', 'asdfs', view_func=self.poll_data)
         
     def index(self):
-        temp=self.temps['local'][-1][1]
-        setpoint_temp=self.get_setpoint()[0]
+        temp=round(self.temps['local'][-1][1], 1)
+        setpoint_temp=round(self.get_setpoint()[0], 1)
         return render_template('index.html', temp=temp, setpoint_temp=setpoint_temp)
 
     def set_temp(self):
         current_setpoint = self.get_setpoint()
         temp_change = request.args.get('temp', 0, type=int)
         self.set_setpoint(current_setpoint[0]+temp_change, current_setpoint[1])
-        return jsonify(setpoint_temp=self.get_setpoint()[0])
+        return jsonify(setpoint_temp=round(self.get_setpoint()[0], 1))
 
     def poll_data(self):
         current_setpoint = self.get_setpoint()
         current_temp = self.temps['local'][-1][1]
-        reply=jsonify(setpoint_temp=current_setpoint[0],
-                      temp=current_temp)
+        reply=jsonify(setpoint_temp=round(current_setpoint[0],1),
+                      temp=round(current_temp, 1))
         return reply
     
     def run(self):

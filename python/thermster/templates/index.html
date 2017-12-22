@@ -1,41 +1,74 @@
 <!doctype html>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script type=text/javascript>
-  $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+<html lang="en">
+  <head>
+    <title>Awesome thermostat</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  (function pollServer() {
-    $.getJSON($SCRIPT_ROOT + '/_poll_data', function (response) {
-      if (response.temp) {
-        $("#setpoint_temp").text(response.setpoint_temp);
-        $("#temp").text(response.temp);
-      }
-    setTimeout(pollServer, 1000)
-    });
-  })();
-  
-  
-  $(function() {
-    $('a#set_temp').bind('click', function() {
-      $.getJSON($SCRIPT_ROOT + '/_set_temp', {
-        temp: $('input[name="a"]').val(),
-      }, function(data) {
-        $("#result").text(data.setpoint_temp);
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <script type=text/javascript>
+      $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
+
+      (function pollServer() {
+        $.getJSON($SCRIPT_ROOT + '/_poll_data', function (response) {
+          if (response.temp) {
+            $("#setpoint_temp").text(response.setpoint_temp);
+            $("#temp").text(response.temp);
+          }
+        setTimeout(pollServer, 1000)
+        });
+      })();      
+      
+      $(function() {
+        $('a#set_temp').bind('click', function() {
+          $.getJSON($SCRIPT_ROOT + '/_set_temp', {
+            temp: $('input[name="a"]').val(),
+          }, function(data) {
+            $("#setpoint_temp").text(data.setpoint_temp);
+          });
+          return false;
+        });
       });
-      return false;
-    });
-  });
-</script>
 
-<h1>jQuery Example</h1>
-<p><input type=text size=5 name=a> +
-   {{ setpoinot_temp }} =
-   <span id=result>?</span>
-<p><a href=# id=set_temp>calculate server side</a>
+      $(function() {
+        $('#increase_temp').bind('click', function() {
+          $.getJSON($SCRIPT_ROOT + '/_set_temp', {
+            temp: 1,
+          }, function(data) {
+            $("#setpoint_temp").text(data.setpoint_temp);
+          });
+          return false;
+        });
+      });
+
+      $(function() {
+        $('#decrease_temp').bind('click', function() {
+          $.getJSON($SCRIPT_ROOT + '/_set_temp', {
+            temp: -1,
+          }, function(data) {
+            $("#setpoint_temp").text(data.setpoint_temp);
+          });
+          return false;
+        });
+      });
+    </script>
+
+  </head>
+  <body>
+
+    <h1>Hello! It's <span id=temp>{{ temp }}</span> &deg;C!</h1>
+    <h2>The current setpoint is <span id=setpoint_temp>{{ setpoint_temp }}</span> &deg;C.</h2>
+    <button type="button" id=increase_temp>Increase</button><button type="button" id="decrease_temp">Decrease</button>
   
-<title>Superstat</title>
-{% if temp %}
-  <h1>Hello! It's <span id=temp>{{ temp }}</span> degrees celsius!</h1>
-  <h2>The current setpoint is <span id=setpoint_temp>{{ setpoint_temp }}</span>.</h2>
-{% else %}
-  <h1>Hello, World!</h1>
-{% endif %}
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!-- <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+  </body>
+</html>
