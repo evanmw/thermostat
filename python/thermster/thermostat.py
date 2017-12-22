@@ -62,6 +62,8 @@ class Thermostat():
         self.threads = []
         for obj in self.thread_objects:
             self.threads.append(threading.Thread(name=obj.name, target=obj.run))
+            if self.threads[-1].name == "webserver":
+                self.threads[-1].daemon = True   # super hack to get this to exit on ctrl+c
             self.threads[-1].start()
         logging.debug("Threads started")
 
