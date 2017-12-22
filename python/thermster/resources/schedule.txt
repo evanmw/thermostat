@@ -1,0 +1,4 @@
+# Schedule entries:
+# mtwrf 6:00am 21 0
+
+mtwrf 8:00am 23 0
