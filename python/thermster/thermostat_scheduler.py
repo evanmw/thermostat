@@ -3,48 +3,45 @@ import time
 import datetime
 import threading
 import logging
-import csv
-import os
 import string
 
-SCHEDULE_FILE_PATH='/home/pi/thermostat/python/thermster/resources/schedule.txt'
-SCHEDULE_CHECK_PERIOD = 10 # seconds
-
-class ThermostatSchedule():
-    def __init__(self, name, data):
-        self.name = name
-        self.kill_received = False
-        self.set_setpoint = data.set_setpoint
-        self.setpoint_lock = data.setpoint_lock
-        self.setpoint = data.get_setpoint
-        self.sheshule = schedule.Scheduler()
-
-        self.last_update_time = 0.0
-        self.update_schedule()
+class ThermostatScheduler():
+    def __init__(self, sheshule, sheshule_lock, sheshule_file_path, set_setpoint):
+        self.sheshule = sheshule
+        self.shesh_lock = sheshule_lock
+        self.shesh_file_path = sheshule_file_path
+        self.set_setpoint = set_setpoint
         
-    def update_schedule(self):
-        modified_time = os.path.getmtime(SCHEDULE_FILE_PATH)
-        if modified_time > self.last_update_time:
-            self.sheshule = self.read_schedule()
-            self.last_update_time = time.time()
-        
-    def read_schedule(self):
-        with open(SCHEDULE_FILE_PATH, 'rb') as schedule_file:
-            # make a new schedule object
-            new_shesh = schedule.Scheduler()
-            for entry in schedule_file:
-                parsed_entry = self.parse_schedule(entry)
-                if (parsed_entry):
-                    self.set_schedule(new_shesh, parsed_entry)
-            return new_shesh
+    def update_from_file(self):
+        entries = self.read_schedule()
+        new_shesh = self.construct_schedule(entries)
+        if self.update_schedule(new_shesh):
+            return True
+        return False
                 
-    def parse_schedule(self, entry):
+    def update_schedule(self, new_sheshule):
+        with self.shesh_lock:
+            self.sheshule = new_sheshule
+            return True
+        return False
+                
+    def read_schedule(self):
+        with open(self.shesh_file_path, 'rb') as schedule_file:
+            entries = []
+            for entry in schedule_file:
+                parsed_entry = self.parse_schedule_entry(entry)
+                if (parsed_entry):
+                    entries.append(parsed_entry)
+            return entries
+               
+    def parse_schedule_entry(self, entry):
         entry = entry.split('#', 1)[0]  # cut out any comments
         entry = entry.split()  # turn entry into a list
         if len(entry) != 4:
             return False
         try:
             set_time = time.strptime(entry[1], "%I:%M%p") # convert to time object
+            set_time = time.strftime("%H:%M", set_time)   # convert to 24 hour time
         except:
             logging.warn("Failed to parse schedule time: %s" % entry[1])
             return False
@@ -57,8 +54,14 @@ class ThermostatSchedule():
                                'weight': set_weight}
         return schedule_entry_data
 
-    def set_schedule(self, shesh, entry_data):
-        t = time.strftime("%H:%M", entry_data['time'])   # convert to 24 hour time
+    def construct_schedule(self, entries):
+        new_shesh = schedule.Scheduler()
+        for entry in entries:
+            self.set_schedule_entry(new_shesh, entry)
+        return new_shesh
+     
+    def set_schedule_entry(self, shesh, entry_data):
+        t = entry_data['time']
         temp = entry_data['temp']
         weight = entry_data['weight']
         for day in entry_data['days']:
@@ -79,16 +82,5 @@ class ThermostatSchedule():
             else:
                 logging.warn("Invalid day character, %s" % day)
             
-    def run(self):
-        cycles = 0
-        while not self.kill_received:
-            if cycles % SCHEDULE_CHECK_PERIOD == 0:
-                self.update_schedule()
-                cycles = 0
-            self.sheshule.run_pending()
-            cycles += 1
-            time.sleep(1)
-        logging.warn("received kill")
-
 if __name__ == '__main__':
     pass

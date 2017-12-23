@@ -2,10 +2,11 @@ import argparse
 import time
 import threading
 import logging
+import schedule
 from collections import deque
 from remote_thermometer_receive import BTThermometerServer
 from local_thermometer import LocalThermometer
-from thermostat_schedule import ThermostatSchedule
+from schedule_updater import ScheduleUpdater
 from pi_interface import PiInterface
 from flask_server import WebServer
 
@@ -32,12 +33,17 @@ class ThermostatData():
         self.WEIGHT_OPTIONS = [0, 0.25, 0.5, 0.75, 1]
         self.LOCAL_BIAS_CORRECTION = -5.4 # degrees C
         self.REMOTE_BIAS_CORRECTION = -2.7
+        self.SCHEDULE_FILE_PATH = '/home/pi/thermostat/python/thermster/resources/schedule.txt'
 
         self.temps = {}
         self.temps_lock = threading.RLock()
         self.setpoint = (21, 2)
         self.setpoint_lock = threading.RLock()
 
+        self.sheshule = schedule.Scheduler()
+        self.shesh_lock = threading.RLock()
+        self.shesh_file_lock = threading.RLock()
+        
     def set_setpoint(self, temp, thermostat_weight_index):
         with self.setpoint_lock:
             setpoint_temp = max(min(temp, self.MAX_TEMP), self.MIN_TEMP)
@@ -55,7 +61,7 @@ class Thermostat():
         # add threads
         self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.data),
                                LocalThermometer("local", self.data, sample_freq=0.17),
-                               ThermostatSchedule("schedule", self.data),
+                               ScheduleUpdater("schedule", self.data),
                                PiInterface("pi_interface", self.data)]
         if webserver:
             self.thread_objects.append(WebServer("webserver", self.data))
