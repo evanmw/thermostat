@@ -1,4 +1,5 @@
 # Schedule entries:
 # mtwrf 6:00am 21 0
 
-mtwrf 8:00am 23 0
+twf 8:00am 23 0
+m   5:00pm 25 1

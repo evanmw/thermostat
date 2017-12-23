@@ -55,15 +55,54 @@
           return false;
         });
       });
+
     </script>
 
   </head>
   <body>
+    <div class="container">
+      <br>
+      <br>
+      <div class="row">
+        <div class="col"></div>
+        <div class="col-12 text-center">
+          <h1>It's <span id=temp>{{ temp }}</span> &deg;C!</h1>
+          <h2>Setpoint: <span id=setpoint_temp>{{ setpoint_temp }}</span> &deg;C.</h2>
+          <button type="button" id="decrease_temp" class="btn-lg btn-outline-primary">Too hot!!</button>&nbsp;&nbsp;&nbsp;<button type="button" id="increase_temp" class="btn-lg btn-outline-danger">It's freezing</button>
+        </div>
+        <div class="col"></div>
+      </div>
+      <div class="row">
+        <div class="col"></div>
+        <div class="col-12">
+          <br>
+          <br>
+          <h2 id="schedule">Schedule</h2>
 
-    <h1>Hello! It's <span id=temp>{{ temp }}</span> &deg;C!</h1>
-    <h2>The current setpoint is <span id=setpoint_temp>{{ setpoint_temp }}</span> &deg;C.</h2>
-    <button type="button" id="increase_temp" class="btn btn-outline-danger">Increase</button>&nbsp;&nbsp;&nbsp;<button type="button" id="decrease_temp" class="btn btn-outline-primary">Decrease</button>
-  
+          <table class="table">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">Days</th>
+                <th scope="col">Time</th>
+                <th scope="col">Temp</th>
+                <th scope="col">Weight</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for entry in schedule_entries %}
+              <tr>
+                <td>{{ entry.days|join }}</td>
+                <td>{{ entry.time }}</td>
+                <td>{{ entry.temp }}</td>
+                <td>{{ entry.weight }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <div class="col"></div>
+      </div>
+    </div> 
 
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
