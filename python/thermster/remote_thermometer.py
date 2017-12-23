@@ -15,20 +15,19 @@ class BTThermometer():
         self.port = port
         self.freq = sample_freq
         self.sock = None
-
         self.thermometer = Thermometer(THERMOMETER_BIAS_CORRECTION)
-
-        self.bt_connect()
 
     def run(self):
         while (1):
+            if not self.connected:
+                self.bt_connect()
             try:
                 cur_time = datetime.now()
                 self.sock.send("%s, %f" % (cur_time.strftime('%b %d %Y %I:%M:%S%p'),
                                self.thermometer.read_temp()))
             except bluetooth.btcommon.BluetoothError as e:
                 print ("Bluetooth error: %s" % e)
-                self.bt_connect()
+                self.connected = False
             time.sleep(1/SAMPLE_FREQ)
 
     def bt_connect(self):
@@ -39,8 +38,7 @@ class BTThermometer():
         except bluetooth.btcommon.BluetoothError as e:
             print ("Bluetooth error: %s" % e)
             time.sleep(2)
-            connected = False
-            self.bt_connect()
+            self.connected = False
 
 if __name__ == '__main__':
     therm = BTThermometer(BD_ADDR, PORT, SAMPLE_FREQ)
