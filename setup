@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+DS18B20_PIN=4
+
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ $EUID -ne 0 ]]; then
@@ -37,7 +39,7 @@ sudo adduser pi i2c
 
 # add onewire support for the DS18B20 temperature sensor
 sudo echo "#Enable 1-wire support" >> /boot/config.txt
-sudo echo "dtoverlay=w1-gpio" >> /boot/config.txt
+sudo echo "dtoverlay=w1-gpio:gpiopin=$DS18B20_PIN,pullup=0" >> /boot/config.txt
 
 # PWM
 sudo pip install wiringpi
