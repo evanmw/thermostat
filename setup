@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 DS18B20_PIN=4
+REMOTE_UNIT=0 # change to 1 if thiis is a remote unit
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -44,13 +45,49 @@ sudo echo "dtoverlay=w1-gpio:gpiopin=$DS18B20_PIN,pullup=0" >> /boot/config.txt
 # PWM
 sudo pip install wiringpi
 
-
 pushd $ROOT
 git submodule update --init --recursive
 pushd Adafruit_Python_SSD1306
 sudo python setup.py install
 popd
 popd
+
+# Write systemd file to start on boot
+if [ $REMOTE_UNIT -ne 1 ]; then
+   sudo cat > /etc/systemd/system/thermostat.service <<EOF
+[Unit]
+Description=Thermostat
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi
+ExecStart=$(which python) $ROOT/python/thermster/thermostat.py
+ExecStop=$(which kill) \$(/usr/bin/pgrep -f 'thermostat.py')
+
+[Install]
+WantedBy=multi-user.target
+EOF
+else
+   sudo cat > /etc/systemd/system/thermostat.service <<EOF
+[Unit]
+Description=Remote thermometer
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi
+ExecStart=$(which python) $ROOT/python/thermster/remote_thermometer.py
+ExecStop=$(which kill) \$(/usr/bin/pgrep -f 'remote_thermometer.py')
+
+[Install]
+WantedBy=multi-user.target
+EOF
+fi
+sudo systemctl daemon-reload
+sudo systemctl enable thermostat.service
 
 echo "Enabling I2C and 1-wire requires a resboot."
 echo "Type 'y [enter]' to reboot now."

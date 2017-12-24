@@ -32,7 +32,7 @@ class ThermostatData():
         self.MIN_TEMP = 10
         self.WEIGHT_OPTIONS = [0, 0.25, 0.5, 0.75, 1]
         self.LOCAL_BIAS_CORRECTION = -5.4 # degrees C
-        self.REMOTE_BIAS_CORRECTION = -2.7
+        self.REMOTE_BIAS_CORRECTION = -3.0
         self.SCHEDULE_FILE_PATH = '/home/pi/thermostat/python/thermster/resources/schedule.txt'
 
         self.temps = {}
