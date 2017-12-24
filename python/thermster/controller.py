@@ -1,8 +1,8 @@
 import time
 import wiringpi
 
-ON_PWM = 1900
-OFF_PWM = 1100
+ON_PWM = 1.9  # milliseconds
+OFF_PWM = 1.1 # milliseconds
 SERVO_GPIO_PIN = 18
 
 CONTROL_PERIOD = 30 # seconds
@@ -11,7 +11,7 @@ DEAD_BAND = 2 # degrees C
 class Controller():
     def __init__(self, name, data):
         self.name = name
-        self.received_kill = False
+        self.kill_received = False
         self.temps = data.temps
         self.get_setpoint = data.get_setpoints
         self.weights = data.SETPOINT_WEIGHT_OPTIONS
@@ -61,7 +61,7 @@ class Controller():
             self.turn_on()
             
     def run(self):
-        while not received_kill:
+        while not kill_received:
             if time.time() - self.last_update_time > CONTROL_PERIOD:
                 self.update()
                 self.last_update_time = time.time()
