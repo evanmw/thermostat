@@ -1,8 +1,6 @@
 ## Todo
 
-- connect to phone wifi network for testing
 - write controller
-- add web schedule interface
 - start on boot
 
 - formalize setpoint override behavior

@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import logging
+import json
 from thermostat_scheduler import ThermostatScheduler
 
 class WebServer():
@@ -21,10 +22,12 @@ class WebServer():
         self.app.add_url_rule('/', 'home', view_func=self.index)
         self.app.add_url_rule('/_set_temp', 'asdf', view_func=self.set_temp)
         self.app.add_url_rule('/_poll_data', 'asdfs', view_func=self.poll_data)
-        self.app.add_url_rule('/_get_schedule', 'ksks', view_func=self.get_schedule)
-        
+        self.app.add_url_rule('/_update_schedule', 'asasa', view_func=self.update_schedule)
+
     def index(self):
-        temp=round(self.temps['local'][-1][1], 1)
+        temp=0
+        if len(self.temps['local']) > 0:
+               temp=round(self.temps['local'][-1][1], 1)
         setpoint_temp=round(self.get_setpoint()[0], 1)
         return render_template('index.html',
                                temp=temp,
@@ -39,17 +42,32 @@ class WebServer():
 
     def poll_data(self):
         current_setpoint = self.get_setpoint()
-        current_temp = self.temps['local'][-1][1]
-        reply=jsonify(setpoint_temp=round(current_setpoint[0],1),
+        if len(self.temps['local']) > 0:
+            current_temp = self.temps['local'][-1][1]
+        reply=jsonify(setpoint_temp=round(current_setpoint[0], 1),
                       temp=round(current_temp, 1))
         return reply
+
+    def update_schedule(self):
+        entries = json.loads(request.args.get('payload'))
+        for entry in entries:
+            entry['days'] = self.scheduler.check_days(entry['days'])
+            entry['time'] = self.scheduler.check_time(entry['time'])
+            entry['temp'] = self.scheduler.check_temp(entry['temp'])
+            entry['weight']=self.scheduler.check_weight(entry['weight'])
+            for key in entry.keys():
+                if not entry[key]:
+                    reply= "Error: could not parse '%s' field" % key.capitalize()
+                    return jsonify(success='false', message=reply)
+        self.scheduler.write_file_from_dict(entries)
+        return jsonify(success='true', message="Schedule updated")
     
     def run(self):
         logging.warn("starting flask")
-        self.app.run(host='0.0.0.0', port=5678, debug=True, use_reloader=False)
+        self.app.run(host='0.0.0.0', port=5678, debug=True,
+                     use_reloader=False, threaded=True)
         logging.warn("closing flask")
 
         
 if __name__ == '__main__':
-#    app.run(host='0.0.0.0', port=80, debug=True)
     pass

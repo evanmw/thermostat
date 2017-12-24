@@ -1,3 +1,27 @@
-body {
-    background-color: green
+.hide {
+  display: none !important;
+}
+
+.table-editable {
+  position: relative;
+}
+
+.table-remove {
+  color: #700;
+  cursor: pointer;
+}
+.table-remove:hover {
+    color: #f00;
+}
+
+.table-add {
+  color: #070;
+  cursor: pointer;
+}
+.table-add:hover {
+    color: #0b0;
+}
+
+#save-response {
+    display:none;
 }
