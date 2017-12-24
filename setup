@@ -21,6 +21,7 @@ sudo pip install Flask
 # Bluetooth things
 sudo apt install libbluetooth-dev
 sudo pip install pybluez
+sudo cat 'PRETTY_HOSTNAME=thermostat' > /etc/machine-info
 
 # Dependencies for the screen
 sudo apt install -y python-imaging python-smbus
@@ -63,7 +64,7 @@ After=network.target
 Type=simple
 User=pi
 WorkingDirectory=/home/pi
-ExecStart=$(which python) $ROOT/python/thermster/thermostat.py
+ExecStart=$(which python) $ROOT/python/thermster/thermostat.py -w
 ExecStop=$(which kill) \$(/usr/bin/pgrep -f 'thermostat.py')
 
 [Install]
