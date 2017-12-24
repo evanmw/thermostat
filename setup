@@ -39,6 +39,9 @@ if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
 fi
 sudo adduser pi i2c
 
+# python servo control
+sudo pip install wiringpi
+
 # add onewire support for the DS18B20 temperature sensor
 sudo echo "#Enable 1-wire support" >> /boot/config.txt
 sudo echo "dtoverlay=w1-gpio:gpiopin=$DS18B20_PIN,pullup=0" >> /boot/config.txt

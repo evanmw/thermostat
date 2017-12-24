@@ -6,6 +6,7 @@ import schedule
 from collections import deque
 from remote_thermometer_receive import BTThermometerServer
 from local_thermometer import LocalThermometer
+from controller import Controller
 from schedule_updater import ScheduleUpdater
 from pi_interface import PiInterface
 from flask_server import WebServer
@@ -61,6 +62,7 @@ class Thermostat():
         # add threads
         self.thread_objects = [BTThermometerServer("bt_therm", PORT, self.data),
                                LocalThermometer("local", self.data, sample_freq=0.17),
+                               Controller("controller", self.data),
                                ScheduleUpdater("schedule", self.data),
                                PiInterface("pi_interface", self.data)]
         if webserver:
