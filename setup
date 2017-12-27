@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DS18B20_PIN=4
+DS18B20_PIN=12
 REMOTE_UNIT=0 # change to 1 if thiis is a remote unit
 
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -11,7 +11,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 sudo apt update
-sudo apt upgrade
+sudo apt upgrade -y
 sudo apt install -y build-essential python-dev python-pip
 sudo pip install RPi.GPIO
 
@@ -21,14 +21,17 @@ sudo pip install Flask
 # Bluetooth things
 sudo apt install libbluetooth-dev
 sudo pip install pybluez
-sudo cat 'PRETTY_HOSTNAME=thermostat' > /etc/machine-info
+sudo echo 'PRETTY_HOSTNAME=thermostat' > /etc/machine-info
+
+# Scheduler
+sudo pip install schedule
 
 # Dependencies for the screen
 sudo apt install -y python-imaging python-smbus
 
 # i2c setup
 sudo apt install -y python-smbus i2c-tools
-sudo i2c-dev >> /etc/modules
+sudo echo "i2c-dev" >> /etc/modules
 if [ -f /boot/config.txt ]; then
     sudo sed -i '/i2c_arm/s/^#//g' /boot/config.txt # uncomment ine with "i2c_arm" in config file
     sudo sed -i '/i2c1/s/^#//g' /boot/config.txt
@@ -39,9 +42,6 @@ if [ -f /etc/modprobe.d/raspi-blacklist.conf ]; then
 fi
 sudo adduser pi i2c
 
-# python servo control
-sudo pip install wiringpi
-
 # add onewire support for the DS18B20 temperature sensor
 sudo echo "#Enable 1-wire support" >> /boot/config.txt
 sudo echo "dtoverlay=w1-gpio:gpiopin=$DS18B20_PIN,pullup=0" >> /boot/config.txt
@@ -51,7 +51,7 @@ sudo pip install wiringpi
 
 pushd $ROOT
 git submodule update --init --recursive
-pushd Adafruit_Python_SSD1306
+pushd python/Adafruit_Python_SSD1306
 sudo python setup.py install
 popd
 popd

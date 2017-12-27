@@ -143,11 +143,10 @@ class PiInterface():
                 if len(self.temps["local"]) < 1:
                     continue
                 last_local_time, local_temp = self.temps["local"][-1]
-                if len(self.temps["bt_therm"]) < 1:
-                    continue
-                last_remote_time, remote_temp = self.temps["bt_therm"][-1]
-                if datetime.datetime.now() - last_remote_time > datetime.timedelta(seconds=2*self.REMOTE_REPORT_PERIOD):
-                    remote_temp = ' :('
+                if len(self.temps["bt_therm"]) > 1:  ###TODO clean up logic
+                    last_remote_time, remote_temp = self.temps["bt_therm"][-1]
+                    if datetime.datetime.now() - last_remote_time > datetime.timedelta(seconds=2*self.REMOTE_REPORT_PERIOD):
+                        remote_temp = ' :('
 
             # get the setpoint
             setpoint_temp, setpoint_therm = self.get_setpoint()

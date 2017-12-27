@@ -1,35 +1,39 @@
 import time
-import wiringpi
+import RPi.GPIO as GPIO
+import logging
 
 ON_PWM = 1.9  # milliseconds
 OFF_PWM = 1.1 # milliseconds
+
+PWM_FREQUENCY = 50 #HZ
+ON_DUTY_CYCLE = ON_PWM * PWM_FREQUENCY / 10  # = millisec * (1000/Hz) * 100
+OFF_DUTY_CYCLE = OFF_PWM * PWM_FREQUENCY / 10
 SERVO_GPIO_PIN = 18
 
 CONTROL_PERIOD = 30 # seconds
 DEAD_BAND = 2 # degrees C
 
-class Controller():
+class ThermostatController():
     def __init__(self, name, data):
         self.name = name
         self.kill_received = False
         self.temps = data.temps
-        self.get_setpoint = data.get_setpoints
-        self.weights = data.SETPOINT_WEIGHT_OPTIONS
-        
+        self.get_setpoint = data.get_setpoint
+        self.weights = data.WEIGHT_OPTIONS
+
         self.last_update_time = time.time()
-        
+	
         # setup servo
-        wiringpi.wiringPiSetupGpio()
-        wiringpi.pinMode(SERVO_GPIO_PIN, wiringpi.GPIO.PWM_OUTPUT)
-        wiringpi.pwmSetMode(wiringpi.GPIO.PWM_MODE_MS)
-        wiringpi.pwmSetClock(192)
-        wiringpi.pwmSetRange(2000)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(SERVO_GPIO_PIN, GPIO.OUT)
+        self.servo = GPIO.PWM(SERVO_GPIO_PIN, 50)
+        self.servo.start(OFF_DUTY_CYCLE)
 
     def turn_on(self):
-        wiringpi.pwmWrite(SERVO_GPIO_PIN, ON_PWM)
+        self.servo.ChangeDutyCycle(ON_DUTY_CYCLE)
 
     def turn_off(self):
-        wiringpi.pwmWrite(SERVO_GPIO_PIN, OFF_PWM)
+        self.servo.ChangeDutyCycle(OFF_DUTY_CYCLE)
 
     def get_control_temp(self):
         average_time = time.time() - CONTROL_PERIOD ######TODO convert to datetime object
@@ -42,15 +46,17 @@ class Controller():
                 n_samples += 1
                 if n_samples > len(therm)-1:
                     break
-            averages[key] = sum / n_samples
-        weight_index = get_setpoint()[1]
+            averages[key] = sum / n_samples      ####TODO check that there's >0 points
+        weight_index = get_setpoint()[1]         ### TODO define behavior if no current data
         weight = self.weights[weight_index]
 
-        control_temp = (1-weight)*averages['local'] + \  ####TODO make flexible
-                       weight*averages['bt_therm']
+        control_temp = (1-weight)*averages['local'] + \
+                       weight*averages['bt_therm']       ####TODO make flexible
         return control_temp
-    
+	return 15.0
+
     def update(self):
+	logging.warn("running control update")
         setpoint_temp = self.get_setpoint()[0]
         control_temp = self.get_control_temp()
 
@@ -59,12 +65,15 @@ class Controller():
 
         if (setpoint_temp - control_temp) > (DEAD_BAND / 2):
             self.turn_on()
-            
+	
+
     def run(self):
-        while not kill_received:
+        while not self.kill_received:
             if time.time() - self.last_update_time > CONTROL_PERIOD:
                 self.update()
                 self.last_update_time = time.time()
+        self.servo.stop()
+        GPIO.cleanup()
 
 if __name__=='__main__':
     pass
