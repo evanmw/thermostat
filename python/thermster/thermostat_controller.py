@@ -1,13 +1,16 @@
 import time
 import RPi.GPIO as GPIO
 import logging
+from datetime import datetime, timedelta
 
-ON_PWM = 1.9  # milliseconds
-OFF_PWM = 1.1 # milliseconds
+ON_PWM = 1.0  # milliseconds
+OFF_PWM = 1.8 # milliseconds
+DISABLE_PWM = 0.0
 
 PWM_FREQUENCY = 50 #HZ
 ON_DUTY_CYCLE = ON_PWM * PWM_FREQUENCY / 10  # = millisec * (1000/Hz) * 100
 OFF_DUTY_CYCLE = OFF_PWM * PWM_FREQUENCY / 10
+DISABLE_DUTY_CYCLE = DISABLE_PWM * PWM_FREQUENCY / 10
 SERVO_GPIO_PIN = 18
 
 CONTROL_PERIOD = 30 # seconds
@@ -22,41 +25,56 @@ class ThermostatController():
         self.weights = data.WEIGHT_OPTIONS
 
         self.last_update_time = time.time()
-	
+        self.state = "OFF"
+
         # setup servo
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(SERVO_GPIO_PIN, GPIO.OUT)
         self.servo = GPIO.PWM(SERVO_GPIO_PIN, 50)
         self.servo.start(OFF_DUTY_CYCLE)
+        time.sleep(1)
+        self.servo.ChangeDutyCycle(DISABLE_DUTY_CYCLE)
 
     def turn_on(self):
-        self.servo.ChangeDutyCycle(ON_DUTY_CYCLE)
+        if self.state != "ON":
+            self.servo.ChangeDutyCycle(ON_DUTY_CYCLE)
+            time.sleep(1)
+            self.servo.ChangeDutyCycle(DISABLE_DUTY_CYCLE)
+            self.state = "ON"
 
     def turn_off(self):
-        self.servo.ChangeDutyCycle(OFF_DUTY_CYCLE)
+        if self.state != "OFF":
+            self.servo.ChangeDutyCycle(OFF_DUTY_CYCLE)
+            time.sleep(1)
+            self.servo.ChangeDutyCycle(DISABLE_DUTY_CYCLE)
+            self.state = "OFF"
 
     def get_control_temp(self):
-        average_time = time.time() - CONTROL_PERIOD ######TODO convert to datetime object
-        averages = {}
+        average_time = datetime.now() - timedelta(CONTROL_PERIOD)
+        averages = {} # tuples: (valid_bit, average)
         for key, therm in list(self.temps.items()):
             n_samples = 0
+            last_sample_time = datetime.now()
             sum = 0.0
-            while therm[-n_samples][0] > average_time:
-                sum += therm[-n_samples][1]
-                n_samples += 1
-                if n_samples > len(therm)-1:
+            while last_sample_time > average_time:
+                if n_samples < len(therm):
+                    sum += therm[-n_samples][1]
+                    n_samples += 1
+                    last_sample_time = therm[-n_samples][0]
+                else:
                     break
-            averages[key] = sum / n_samples      ####TODO check that there's >0 points
-        weight_index = get_setpoint()[1]         ### TODO define behavior if no current data
+            if n_samples > 0:
+                averages[key] = (True, sum / n_samples)
+            else:
+                averages[key] = (False, 0)
+        weight_index = self.get_setpoint()[1]
         weight = self.weights[weight_index]
-
-        control_temp = (1-weight)*averages['local'] + \
-                       weight*averages['bt_therm']       ####TODO make flexible
+        #TODO Actually do something if one of the sources is invalid
+        control_temp = (1-weight)*averages['local'][1] + \
+                       weight*averages['bt_therm'][1]       ####TODO make flexible
         return control_temp
-	return 15.0
 
     def update(self):
-	logging.warn("running control update")
         setpoint_temp = self.get_setpoint()[0]
         control_temp = self.get_control_temp()
 
@@ -65,7 +83,6 @@ class ThermostatController():
 
         if (setpoint_temp - control_temp) > (DEAD_BAND / 2):
             self.turn_on()
-	
 
     def run(self):
         while not self.kill_received:

@@ -58,8 +58,8 @@ class PiInterface():
         self.draw = ImageDraw.Draw(self.image)
         self.draw.rectangle((0, 0, self.width, self.height), outline=0, fill=0)
 
-        self.font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=33)
-        self.s_font = ImageFont.truetype('resources/OpenSans-Regular.ttf', size=28)
+        self.font = ImageFont.truetype('/home/pi/thermostat/python/thermster/resources/OpenSans-Regular.ttf', size=33)
+        self.s_font = ImageFont.truetype('/home/pi/thermostat/python/thermster/resources/OpenSans-Regular.ttf', size=28)
 
         # Set pins as innputs:
         GPIO.setmode(GPIO.BCM) 
@@ -143,10 +143,15 @@ class PiInterface():
                 if len(self.temps["local"]) < 1:
                     continue
                 last_local_time, local_temp = self.temps["local"][-1]
-                if len(self.temps["bt_therm"]) > 1:  ###TODO clean up logic
+                if len(self.temps["bt_therm"]) > 0:  ###TODO clean up logic
                     last_remote_time, remote_temp = self.temps["bt_therm"][-1]
                     if datetime.datetime.now() - last_remote_time > datetime.timedelta(seconds=2*self.REMOTE_REPORT_PERIOD):
+                        logging.warn("too old")
+                        logging.warn(last_remote_time)
+                        logging.warn(datetime.datetime.now())
                         remote_temp = ' :('
+                else:
+                    remote_temp = ':('
 
             # get the setpoint
             setpoint_temp, setpoint_therm = self.get_setpoint()
