@@ -105,7 +105,7 @@
 
       $(function() {
         $('#increase_temp').bind('click', function() {
-          $.getJSON($SCRIPT_ROOT + '/_set_temp', {
+          $.getJSON($SCRIPT_ROOT + '/_increment_temp', {
             temp: 1,
           }, function(data) {
             $("#setpoint_temp").text(data.setpoint_temp);
@@ -116,7 +116,7 @@
 
       $(function() {
         $('#decrease_temp').bind('click', function() {
-          $.getJSON($SCRIPT_ROOT + '/_set_temp', {
+          $.getJSON($SCRIPT_ROOT + '/_increment_temp', {
             temp: -1,
           }, function(data) {
             $("#setpoint_temp").text(data.setpoint_temp);

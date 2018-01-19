@@ -20,7 +20,8 @@ class WebServer():
         
         # define routes
         self.app.add_url_rule('/', 'home', view_func=self.index)
-        self.app.add_url_rule('/_set_temp', 'asdf', view_func=self.set_temp)
+        self.app.add_url_rule('/_increment_temp', 'asdf', view_func=self.increment_temp)
+        self.app.add_url_rule('/_set_temp', 'sasds', view_func=self.set_temp)
         self.app.add_url_rule('/_poll_data', 'asdfs', view_func=self.poll_data)
         self.app.add_url_rule('/_update_schedule', 'asasa', view_func=self.update_schedule)
 
@@ -34,11 +35,21 @@ class WebServer():
                                setpoint_temp=setpoint_temp,
                                schedule_entries=self.scheduler.read_schedule())
 
-    def set_temp(self):
+    def increment_temp(self):
         current_setpoint = self.get_setpoint()
         temp_change = request.args.get('temp', 0, type=int)
         self.set_setpoint(current_setpoint[0]+temp_change, current_setpoint[1])
         return jsonify(setpoint_temp=round(self.get_setpoint()[0], 1))
+
+    def set_temp(self):
+        logging.warn("Got command from IFTTT")
+        current_setpoint = self.get_setpoint()
+        new_temp = request.args.get('temp', 0, type=int)
+        logging.warn("Setting temperature to %i from Google" % new_temp)
+        if new_temp > 40:
+            new_temp = (new_temp-32)*(5/9)
+        self.set_setpoint(new_temp, current_setpoint[1])
+        return True
 
     def poll_data(self):
         current_setpoint = self.get_setpoint()
@@ -64,7 +75,7 @@ class WebServer():
     
     def run(self):
         logging.warn("starting flask")
-        self.app.run(host='0.0.0.0', port=5678, debug=True,
+        self.app.run(host='0.0.0.0', port=80, debug=True,
                      use_reloader=False, threaded=True)
         logging.warn("closing flask")
 
