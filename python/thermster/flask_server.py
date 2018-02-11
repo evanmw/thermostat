@@ -17,11 +17,11 @@ class WebServer():
                                              data.shesh_lock,
                                              data.SCHEDULE_FILE_PATH,
                                              data.set_setpoint)
-        
+
         # define routes
         self.app.add_url_rule('/', 'home', view_func=self.index)
         self.app.add_url_rule('/_increment_temp', 'asdf', view_func=self.increment_temp)
-        self.app.add_url_rule('/_set_temp', 'sasds', view_func=self.set_temp)
+        self.app.add_url_rule('/_set_temp', 'sasds', view_func=self.set_temp,methods=["GET","POST"])
         self.app.add_url_rule('/_poll_data', 'asdfs', view_func=self.poll_data)
         self.app.add_url_rule('/_update_schedule', 'asasa', view_func=self.update_schedule)
 
@@ -43,13 +43,15 @@ class WebServer():
 
     def set_temp(self):
         logging.warn("Got command from IFTTT")
+        logging.warn(request.get_json())
         current_setpoint = self.get_setpoint()
-        new_temp = request.args.get('temp', 0, type=int)
+        data=request.get_json()
+        new_temp = int(data["temp"])
         logging.warn("Setting temperature to %i from Google" % new_temp)
         if new_temp > 40:
             new_temp = (new_temp-32)*(5/9)
         self.set_setpoint(new_temp, current_setpoint[1])
-        return True
+        return jsonify(1)
 
     def poll_data(self):
         current_setpoint = self.get_setpoint()
@@ -72,13 +74,13 @@ class WebServer():
                     return jsonify(success='false', message=reply)
         self.scheduler.write_file_from_dict(entries)
         return jsonify(success='true', message="Schedule updated")
-    
+
     def run(self):
         logging.warn("starting flask")
         self.app.run(host='0.0.0.0', port=80, debug=True,
                      use_reloader=False, threaded=True)
         logging.warn("closing flask")
 
-        
+
 if __name__ == '__main__':
     pass
